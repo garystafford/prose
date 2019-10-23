@@ -2,12 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"gopkg.in/jdkato/prose.v2"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"gopkg.in/jdkato/prose.v2"
 )
 
 // A Token represents an individual Token of Text such as a word or punctuation symbol.
@@ -25,7 +26,7 @@ type Entity struct {
 }
 
 var (
-	portClient = os.Getenv("RAKE_PORT")
+	portClient = os.Getenv("PROSE_PORT")
 )
 
 func main() {
