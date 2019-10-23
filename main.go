@@ -26,7 +26,7 @@ type Entity struct {
 }
 
 var (
-	portClient = getEnv("PROSE_PORT", "8080")
+	portClient = getEnv("PROSE_PORT", "8082")
 )
 
 func main() {
