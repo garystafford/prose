@@ -1,4 +1,4 @@
-# Go Microservice: prose-client
+# Go Microservice: prose-app
 
 Go-based microservice, part of a set of (3) microservices for upcoming post.
 
