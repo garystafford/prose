@@ -1,6 +1,6 @@
 # Go Microservice: prose-app
 
-Go-based microservice, part of a set of (3) microservices for upcoming post.
+Go-based microservice, part of a set of (3) microservices for the application used in the blog post, [Amazon Elastic Container Registry (ECR) Cross-Account Access](https://programmaticponderings.com/). Please read the post for complete instructions on how to use the files in this repository.
 
 ## Build Three Required Images
 
