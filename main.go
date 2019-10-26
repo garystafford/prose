@@ -26,7 +26,7 @@ type Entity struct {
 }
 
 var (
-	portClient = getEnv("PROSE_PORT", "8082")
+	serverPort = ":" + getEnv("PROSE_PORT", ":8082")
 )
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 	e.POST("/entities", getEntities)
 
 	// Start server
-	e.Logger.Fatal(e.Start(portClient))
+	e.Logger.Fatal(e.Start(serverPort))
 }
 
 func getEnv(key, fallback string) string {
