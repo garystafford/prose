@@ -26,7 +26,7 @@ type Entity struct {
 }
 
 var (
-	serverPort = ":" + getEnv("PROSE_PORT", ":8082")
+	serverPort = ":" + getEnv("PROSE_PORT", "8082")
 )
 
 func main() {
@@ -111,6 +111,7 @@ func getEntities(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, nil)
 		}
+
 		for _, docEntities := range doc.Entities() {
 			entities = append(entities, Entity{
 				Text:  docEntities.Text,
@@ -118,6 +119,5 @@ func getEntities(c echo.Context) error {
 			})
 		}
 	}
-
 	return c.JSON(http.StatusOK, entities)
 }
