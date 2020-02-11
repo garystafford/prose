@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/jdkato/prose.v2"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 // A Token represents an individual Token of Text such as a word or punctuation symbol.
@@ -25,7 +28,17 @@ type Entity struct {
 
 var (
 	serverPort = ":" + getEnv("PROSE_PORT", "8080")
+	apiKey     = getEnv("API_KEY", "")
+	log        = logrus.New()
 )
+
+func init() {
+	log.Formatter = &logrus.JSONFormatter{
+		TimestampFormat: time.RFC3339Nano,
+	}
+	log.Out = os.Stdout
+	log.SetLevel(logrus.DebugLevel)
+}
 
 func main() {
 	// Echo instance
@@ -35,18 +48,20 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	//e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-	//	Skipper: func(c echo.Context) bool {
-	//		if strings.HasPrefix(c.Request().RequestURI, "/health") {
-	//			return true
-	//		}
-	//		return false
-	//	},
-	//	Validator: func(key string, c echo.Context) (bool, error) {
-	//		return key == os.Getenv("AUTH_KEY"), nil
-	//	},
-	//}))
-	//
+	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		KeyLookup: "header:X-API-Key",
+		Skipper: func(c echo.Context) bool {
+			if strings.HasPrefix(c.Request().RequestURI, "/health") {
+				return true
+			}
+			return false
+		},
+		Validator: func(key string, c echo.Context) (bool, error) {
+			log.Debugf("API_KEY: %v", apiKey)
+			return key == apiKey, nil
+		},
+	}))
+
 	// Routes
 	e.GET("/health", getHealth)
 	e.POST("/tokens", getTokens)
@@ -60,6 +75,7 @@ func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value
 	}
+
 	return fallback
 }
 
@@ -67,7 +83,7 @@ func getHealth(c echo.Context) error {
 	var response interface{}
 	err := json.Unmarshal([]byte(`{"status":"UP"}`), &response)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError)
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 
 	return c.JSON(http.StatusOK, response)
@@ -78,12 +94,12 @@ func getTokens(c echo.Context) error {
 	jsonMap := make(map[string]interface{})
 	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusInternalServerError, err)
 	} else {
 		text := jsonMap["text"]
 		doc, err := prose.NewDocument(text.(string))
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, nil)
+			return c.JSON(http.StatusInternalServerError, err)
 		}
 
 		for _, docToken := range doc.Tokens() {
@@ -94,6 +110,7 @@ func getTokens(c echo.Context) error {
 			})
 		}
 	}
+
 	return c.JSON(http.StatusOK, tokens)
 }
 
@@ -102,12 +119,12 @@ func getEntities(c echo.Context) error {
 	jsonMap := make(map[string]interface{})
 	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, nil)
+		return c.JSON(http.StatusInternalServerError, err)
 	} else {
 		text := jsonMap["text"]
 		doc, err := prose.NewDocument(text.(string))
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, nil)
+			return c.JSON(http.StatusInternalServerError, err)
 		}
 
 		for _, docEntities := range doc.Entities() {
@@ -117,5 +134,6 @@ func getEntities(c echo.Context) error {
 			})
 		}
 	}
+
 	return c.JSON(http.StatusOK, entities)
 }
