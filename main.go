@@ -30,6 +30,9 @@ var (
 	serverPort = ":" + getEnv("PROSE_PORT", "8080")
 	apiKey     = getEnv("API_KEY", "")
 	log        = logrus.New()
+
+	// Echo instance
+	e = echo.New()
 )
 
 func init() {
@@ -41,9 +44,6 @@ func init() {
 }
 
 func main() {
-	// Echo instance
-	e := echo.New()
-
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
