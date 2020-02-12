@@ -1,3 +1,10 @@
+// author: Gary A. Stafford
+// site: https://programmaticponderings.com
+// license: MIT License
+// purpose: RESTful Go implementation of gopkg.in/jdkato/prose.v2 package
+//          for text processing, including tokenization, part-of-speech tagging, and named-entity extraction
+//          by https://github.com/jdkato/prose/tree/v2
+
 package main
 
 import (
@@ -83,7 +90,8 @@ func getHealth(c echo.Context) error {
 	var response interface{}
 	err := json.Unmarshal([]byte(`{"status":"UP"}`), &response)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		log.Errorf("json.Unmarshal Error: %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	return c.JSON(http.StatusOK, response)
@@ -94,12 +102,14 @@ func getTokens(c echo.Context) error {
 	jsonMap := make(map[string]interface{})
 	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		log.Errorf("json.NewDecoder Error: %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	} else {
 		text := jsonMap["text"]
 		doc, err := prose.NewDocument(text.(string))
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err)
+			log.Errorf("prose.NewDocument Error: %v", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
 		for _, docToken := range doc.Tokens() {
@@ -119,7 +129,7 @@ func getEntities(c echo.Context) error {
 	jsonMap := make(map[string]interface{})
 	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	} else {
 		text := jsonMap["text"]
 		doc, err := prose.NewDocument(text.(string))
