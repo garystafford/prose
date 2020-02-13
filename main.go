@@ -33,10 +33,28 @@ type Entity struct {
 	Label string `json:"label"` // The entity's label.
 }
 
+// A Sentence represents a doc's sentence.
+type Sentence struct {
+	Text string `json:"text"` // The sentences.
+}
+
+type DocOpts struct {
+	Extract  bool // If true, include named-entity extraction
+	Segment  bool // If true, include segmentation
+	Tag      bool // If true, include POS tagging
+	Tokenize bool // If true, include tokenization
+}
+
 var (
 	serverPort = ":" + getEnv("PROSE_PORT", "8080")
 	apiKey     = getEnv("API_KEY", "")
 	log        = logrus.New()
+	docOpts    = DocOpts{
+		Extract:  true,
+		Segment:  true,
+		Tag:      true,
+		Tokenize: true,
+	}
 
 	// Echo instance
 	e = echo.New()
@@ -73,6 +91,7 @@ func main() {
 	e.GET("/health", getHealth)
 	e.POST("/tokens", getTokens)
 	e.POST("/entities", getEntities)
+	e.POST("/sentences", getSentences)
 
 	// Start server
 	e.Logger.Fatal(e.Start(serverPort))
@@ -129,11 +148,13 @@ func getEntities(c echo.Context) error {
 	jsonMap := make(map[string]interface{})
 	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
 	if err != nil {
+		log.Errorf("json.NewDecoder Error: %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	} else {
 		text := jsonMap["text"]
 		doc, err := prose.NewDocument(text.(string))
 		if err != nil {
+			log.Errorf("prose.NewDocument Error: %v", err)
 			return c.JSON(http.StatusInternalServerError, err)
 		}
 
@@ -146,4 +167,29 @@ func getEntities(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, entities)
+}
+
+func getSentences(c echo.Context) error {
+	var sentences []Sentence
+	jsonMap := make(map[string]interface{})
+	err := json.NewDecoder(c.Request().Body).Decode(&jsonMap)
+	if err != nil {
+		log.Errorf("json.NewDecoder Error: %v", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	} else {
+		text := jsonMap["text"]
+		doc, err := prose.NewDocument(text.(string))
+		if err != nil {
+			log.Errorf("prose.NewDocument Error: %v", err)
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+
+		for _, docEntities := range doc.Sentences() {
+			sentences = append(sentences, Sentence{
+				Text: docEntities.Text,
+			})
+		}
+	}
+
+	return c.JSON(http.StatusOK, sentences)
 }
