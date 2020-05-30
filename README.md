@@ -119,5 +119,5 @@ ac5501bb9a79        111222333444.dkr.ecr.us-east-2.amazonaws.com/rake-app:1.0.0 
 7ae5369d4293        999888777666.dkr.ecr.us-west-2.amazonaws.com/prose-app:1.0.0      "/go/bin/app"       15 seconds ago      Up 13 seconds                           nlp_prose-app.1.6wkb8x6slva7t253ksucfshyu
 4ab51b9f4271        999888777666.dkr.ecr.us-west-2.amazonaws.com/lang-app:1.0.0       "/go/bin/app"       15 seconds ago      Up 13 seconds                           nlp_lang-app.1.hlczjvxpppecosuwdt8bhu7wl
 4ab51b9f4271        999888777666.dkr.ecr.us-west-2.amazonaws.com/dynamo-app:1.0.0     "/go/bin/app"       18 seconds ago      Up 13 seconds                           nlp_dynamo-app.1.twe6izgw7xhg6ruvu96sl6b74
-Admin-01:~/environment/ecr-cross-accnt-demo (master) $ 
+Admin-01:~/environment/ecr-cross-accnt-demo (master) $
 ```
