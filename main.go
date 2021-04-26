@@ -1,18 +1,19 @@
 // author: Gary A. Stafford
 // site: https://programmaticponderings.com
 // license: MIT License
-// purpose: RESTful Go implementation of gopkg.in/jdkato/prose.v2 package
+// purpose: RESTful Go implementation of github.com/jdkato/prose/v2 package
 //          for text processing, including tokenization, part-of-speech tagging, and named-entity extraction
 //          by https://github.com/jdkato/prose/tree/v2
+// modified: 2021-04-25
 
 package main
 
 import (
 	"encoding/json"
+	"github.com/jdkato/prose/v2"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/jdkato/prose.v2"
 	"net/http"
 	"os"
 	"strings"
