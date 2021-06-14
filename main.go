@@ -4,20 +4,20 @@
 // purpose: RESTful Go implementation of github.com/jdkato/prose/v2 package
 //          for text processing, including tokenization, part-of-speech tagging, and named-entity extraction
 //          by https://github.com/jdkato/prose/tree/v2
-// modified: 2021-04-25
+// modified: 2021-06-13
 
 package main
 
 import (
 	"encoding/json"
 	"github.com/jdkato/prose/v2"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
-	"github.com/sirupsen/logrus"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
-	"time"
 )
 
 // A Token represents an individual Token of Text such as a word or punctuation symbol.
@@ -47,56 +47,17 @@ type DocOpts struct {
 }
 
 var (
-	serverPort = ":" + getEnv("PROSE_PORT", "8080")
-	apiKey     = getEnv("API_KEY", "")
-	log        = logrus.New()
+	logLevel   = getEnv("LOG_LEVEL", "1") // INFO
+	serverPort = getEnv("PROSE_PORT", "8080")
+	apiKey     = getEnv("API_KEY", "ChangeMe")
+	e          = echo.New()
 	docOpts    = DocOpts{
 		Extract:  true,
 		Segment:  true,
 		Tag:      true,
 		Tokenize: true,
 	}
-
-	// Echo instance
-	e = echo.New()
 )
-
-func init() {
-	log.Formatter = &logrus.JSONFormatter{
-		TimestampFormat: time.RFC3339Nano,
-	}
-	log.Out = os.Stdout
-	log.SetLevel(logrus.DebugLevel)
-}
-
-func main() {
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		KeyLookup: "header:X-API-Key",
-		Skipper: func(c echo.Context) bool {
-			if strings.HasPrefix(c.Request().RequestURI, "/health") {
-				return true
-			}
-			return false
-		},
-		Validator: func(key string, c echo.Context) (bool, error) {
-			log.Debugf("API_KEY: %v", apiKey)
-			return key == apiKey, nil
-		},
-	}))
-
-	// Routes
-	e.GET("/health", getHealth)
-	e.POST("/tokens", getTokens)
-	e.POST("/entities", getEntities)
-	e.POST("/sentences", getSentences)
-
-	// Start server
-	e.Logger.Fatal(e.Start(serverPort))
-}
 
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
@@ -193,4 +154,45 @@ func getSentences(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, sentences)
+}
+
+func run() error {
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		KeyLookup: "header:X-API-Key",
+		Skipper: func(c echo.Context) bool {
+			if strings.HasPrefix(c.Request().RequestURI, "/health") {
+				return true
+			}
+			return false
+		},
+		Validator: func(key string, c echo.Context) (bool, error) {
+			log.Debugf("API_KEY: %v", apiKey)
+			return key == apiKey, nil
+		},
+	}))
+
+	// Routes
+	e.GET("/health", getHealth)
+	e.POST("/tokens", getTokens)
+	e.POST("/entities", getEntities)
+	e.POST("/sentences", getSentences)
+
+	// Start server
+	return e.Start(serverPort)
+}
+
+func init() {
+	level, _ := strconv.Atoi(logLevel)
+	e.Logger.SetLevel(log.Lvl(level))
+}
+
+func main() {
+	if err := run(); err != nil {
+		e.Logger.Fatal(err)
+		os.Exit(1)
+	}
 }
