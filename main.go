@@ -10,14 +10,15 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jdkato/prose/v2"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/labstack/gommon/log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/jdkato/prose/v2"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 )
 
 // A Token represents an individual Token of Text such as a word or punctuation symbol.
@@ -68,14 +69,10 @@ func getEnv(key, fallback string) string {
 }
 
 func getHealth(c echo.Context) error {
-	var response interface{}
-	err := json.Unmarshal([]byte(`{"status":"UP"}`), &response)
-	if err != nil {
-		log.Errorf("json.Unmarshal Error: %v", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
-	}
-
-	return c.JSON(http.StatusOK, response)
+	healthStatus := struct {
+		Status string `json:"status"`
+	}{"Up"}
+	return c.JSON(http.StatusOK, healthStatus)
 }
 
 func getTokens(c echo.Context) error {
